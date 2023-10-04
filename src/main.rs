@@ -173,18 +173,23 @@ fn write_cell_string(
 }
 
 fn write_cell_number(worksheet: &mut Worksheet, row: &u32, col: &u16, value: &str) -> Result<()> {
-    worksheet.write_number_with_format(
-        *row,
-        *col,
-        value.parse::<f32>().unwrap(),
-        &Format::new()
-            .set_num_format("#,##0.00")
-            .set_align(rust_xlsxwriter::FormatAlign::VerticalCenter)
-            .set_align(rust_xlsxwriter::FormatAlign::Right)
-            .set_indent(1)
-            .set_font_size(10)
-            .set_font_name("Aptos"),
-    )?;
+    if value.parse::<f32>().is_ok() {
+        worksheet.write_number_with_format(
+            *row,
+            *col,
+            value.parse::<f32>().unwrap(),
+            &Format::new()
+                .set_num_format("#,##0.00")
+                .set_align(rust_xlsxwriter::FormatAlign::VerticalCenter)
+                .set_align(rust_xlsxwriter::FormatAlign::Right)
+                .set_indent(1)
+                .set_font_size(10)
+                .set_font_name("Aptos"),
+        )?;
+    } else {
+        worksheet.write(*row, *col, "")?;
+    }
+
     Ok(())
 }
 

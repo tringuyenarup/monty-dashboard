@@ -38,7 +38,7 @@ fn main() -> Result<()> {
         .map(|s| s.to_string())
         .collect::<Vec<String>>();
 
-    let worksheet = workbook.add_worksheet();
+    let mut worksheet = workbook.add_worksheet();
 
     let mut previous_subdivisions: Vec<String> = Vec::new();
     let mut previous_metric: String = String::from("");
@@ -51,8 +51,11 @@ fn main() -> Result<()> {
         if worksheet.name() == *"Sheet1" {
             format_sheet(worksheet, &entry, &scenarios)?;
         } else if worksheet.name() != entry.group {
-            // wont work
+            worksheet = workbook.add_worksheet();
             format_sheet(worksheet, &entry, &scenarios)?;
+            row = 1;
+            previous_subdivisions = Vec::new();
+            previous_metric = String::from("");
         }
         // Write cell
         worksheet.set_row_height(row, 18)?;
@@ -75,24 +78,25 @@ fn main() -> Result<()> {
         if previous_subdivisions.is_empty()
             || previous_subdivisions.first().unwrap() != current_cell_subdivisions.first().unwrap()
         {
-            if row > 2 {
-                row += 1;
-            }
+            // if row > 2 {
+            //     row += 1;
+            // }
             for (index, val) in current_cell_subdivisions.iter().enumerate() {
                 if index != current_cell_subdivisions.len() - 1 {
                     // write string
-                    write_cell_string(worksheet, &row, &col, val, index as u8)?;
+                    write_cell_string(worksheet, &row, &col, val, (index + 1) as u8)?;
                     row += 1;
                 } else {
-                    // write number
+                    // write leaf
                     write_cell_string(
                         worksheet,
                         &row,
                         &col,
                         val,
-                        current_cell_subdivisions.len() as u8,
+                        (current_cell_subdivisions.len() + 1) as u8,
                     )?;
                     col += 1;
+                    // write number
                     for value in entry.values.iter() {
                         write_cell_number(worksheet, &row, &col, value)?;
                         col += 1;
@@ -115,7 +119,7 @@ fn main() -> Result<()> {
                             &row,
                             &col,
                             current_cell_subdivisions.get(index).unwrap(),
-                            i as u8,
+                            (i + 1) as u8,
                         )?;
                         row += 1;
                     }
@@ -126,7 +130,7 @@ fn main() -> Result<()> {
                         &row,
                         &col,
                         current_cell_subdivisions.last().unwrap(),
-                        current_cell_subdivisions.len() as u8,
+                        (current_cell_subdivisions.len() + 1) as u8,
                     )?;
 
                     col += 1;
@@ -160,6 +164,8 @@ fn write_cell_string(
             .set_bold()
             .set_font_size(10)
             .set_font_name("Aptos")
+            .set_align(rust_xlsxwriter::FormatAlign::VerticalCenter)
+            .set_align(rust_xlsxwriter::FormatAlign::Left)
             .set_indent(indent),
     )?;
 
@@ -229,7 +235,7 @@ fn format_sheet(worksheet: &mut Worksheet, entry: &Entry, scenarios: &[String]) 
                     .set_align(rust_xlsxwriter::FormatAlign::VerticalCenter)
                     .set_background_color(0xD3D3D3)
                     .set_border_bottom(rust_xlsxwriter::FormatBorder::Thin)
-                    .set_border_right(rust_xlsxwriter::FormatBorder::Thin)
+                    .set_border_right(rust_xlsxwriter::FormatBorder::Medium)
                     .set_font_size(10)
                     .set_font_name("Aptos"),
             )?;
